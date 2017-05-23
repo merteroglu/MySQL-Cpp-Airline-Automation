@@ -61,9 +61,7 @@ bool connectToDB() {
 	}
 
 	try {
-		//stmt->execute("CREATE TABLE IF NOT EXISTS yolcu(ucustarihi VARCHAR(20),UKN INT NOT NULL,TCKN INT NOT NULL,BN INT NOT NULL,BIN INT NOT NULL,PRIMARY KEY (ucustarihi,UKN,TCKN,BN,BIN),FOREIGN KEY(UKN) REFERENCES ucaklar(UKN),FOREIGN KEY(ucustarihi,BN,BIN) REFERENCES seferler(ucustarihi,BN,BIN),FOREIGN KEY(TCKN) REFERENCES yolcular(TCKN))");
-		//stmt->execute("CREATE TABLE IF NOT EXISTS yolcu(ucustarihi VARCHAR(20), foreign key(ucustarihi) references seferler(ucustarihi) , UKN INT, foreign key(UKN) references ucaklar(UKN) , TCKN INT, foreign key(TCKN) references yolcular(TCKN),BN INT, foreign key(BN) references seferler(BN),BIN INT, foreign key(BIN) references seferler(BIN), PRIMARY KEY(ucustarihi,UKN,TCKN,BN,BIN) )");
-		stmt->execute("CREATE TABLE IF NOT EXISTS yolcu(ucustarihi VARCHAR(20),UKN INT NOT NULL,TCKN INT NOT NULL,BN INT NOT NULL, BIN INT NOT NULL, CONSTRAINT fk_yolcu_sefer FOREIGN KEY(ucustarihi,UKN) REFERENCES seferler(ucustarihi,UKN) ON DELETE CASCADE) ");
+		stmt->execute("CREATE TABLE IF NOT EXISTS yolcu(ucustarihi VARCHAR(20),UKN INT NOT NULL,TCKN INT NOT NULL,BN INT NOT NULL, BIN INT NOT NULL, CONSTRAINT fk_yolcu_sefer_tarih FOREIGN KEY(ucustarihi) REFERENCES seferler(ucustarihi) ON DELETE CASCADE,CONSTRAINT fk_yolcu_sefer_ukn FOREIGN KEY(UKN) REFERENCES ucaklar(UKN) ON DELETE CASCADE ,CONSTRAINT fk_yolcu_yolcular FOREIGN KEY(TCKN) REFERENCES yolcular(TCKN) ON DELETE CASCADE )");
 	}
 	catch (sql::SQLException &e) {
 		cout << "Yolcu Tablosu olusturulamadi !" << e.what() << endl;
@@ -103,9 +101,12 @@ void getPassengerInfo() {
 	cout << "Yolcu TC kimlik numarinizi giriniz:" << flush;
 	cin >> TCKN;
 	cin.clear();
+	cin.ignore();
 	cout << "Yolcu adini giriniz:" << flush;
-	cin >> Name;
+	//cin >> Name;
+	getline(cin, Name);
 	cin.clear();
+	cin.ignore();
 	cout << "Yolcu'nun sehrini giriniz:" << flush;
 	cin >> City;
 	cin.clear();
@@ -113,9 +114,11 @@ void getPassengerInfo() {
 	cout << "Yolcunun acik adresini giriniz:" << flush;
 	getline(cin, Address);
 	cin.clear();
+	cin.ignore();
 	cout << "Yolcu emailini giriniz:" << flush;
 	cin >> email;
 	cin.clear();
+	cin.ignore();
 	addPassenger(TCKN, Name, City, Address, email);
 }
 
@@ -229,12 +232,12 @@ void listsPassengers() {
 
 	cout << "\n\n";
 	cout << setiosflags(ios::left);
-	cout << setw(20) << "TCKN" << setw(20) << "Isim" << setw(20) << "Sehir" << setw(20) << "Adres" << setw(20) << "Eposta" << endl;
+	cout << setw(20) << "TCKN" << setw(20) << "Isim" << setw(20) << "Sehir" << setw(30) << "Adres" << setw(25) << "Eposta" << endl;
 	try {
 		prpStmt = con->prepareStatement("Select * from yolcular");
 		res = prpStmt->executeQuery();
 		while (res->next()) {
-			cout <<setw(20) << res->getInt("TCKN")  << setw(20) << res->getString("Isim") << setw(20) << res->getString("Sehir") << setw(20) << res->getString("Adres")  << setw(20) << res->getString("Eposta") << endl;
+			cout <<setw(20) << res->getInt("TCKN")  << setw(20) << res->getString("Isim") << setw(20) << res->getString("Sehir") << setw(30) << res->getString("Adres")  << setw(25) << res->getString("Eposta") << endl;
 		}
 
 	}
@@ -284,7 +287,7 @@ void passengerVoyageQuery() {
 		}
 		else {
 			cout << setiosflags(ios::left);
-			cout << setw(20) << "Ucus Tarihi" << setw(22) << setw(22) << "UKN" << setw(22) << "BN" << setw(22) << "BIN" << endl;
+			cout << setw(20) << "Ucus Tarihi" << setw(20) << "UKN" << setw(20) << "BN" << setw(20) << "BIN" << endl;
 			while (res->next()) {
 				cout << setw(20) << res->getString("ucustarihi") << setw(20) << res->getInt("UKN") << setw(20) << res->getInt("BN") << setw(20) << res->getInt("BIN") << endl;
 			}
@@ -323,7 +326,7 @@ void voyageQuery() {
 		cout << setiosflags(ios::left);
 		cout << setw(20) << "TCKN" << setw(20) << "Isim" << setw(20) << "Sehir" << setw(20) << "Adres" << setw(20) << "Eposta" << endl;
 		while (res->next()) {
-			cout << res->getInt(1) << setw(20) << res->getString(2) << setw(20) << res->getString(3) << setw(20) << res->getString(4) << endl;
+			cout << setw(20) << res->getInt(1) << setw(20) << res->getString(2) << setw(20) << res->getString(3) << setw(20) << res->getString(4) << setw(20) << res->getString(5) << endl;
 		}
 	}
 	catch (sql::SQLException &e) {
@@ -354,7 +357,7 @@ void cancelTicket() {
 	cin.ignore();
 	
 	try {
-		prpStmt = con->prepareStatement("DELETE FROM yolcu where ucustarihi =" + flydate + "AND UKN = " + to_string(ukn) + "AND TCKN = " + to_string(tckn));
+		prpStmt = con->prepareStatement("DELETE FROM yolcu where ucustarihi = " + flydate + " AND UKN = " + to_string(ukn) + " AND TCKN = " + to_string(tckn));
 		res = prpStmt->executeQuery();
 	}
 	catch (sql::SQLException &e) {
@@ -389,15 +392,57 @@ void sellaTicket() {
 	cin >> ticketsNumber;
 	cin.clear();
 	cin.ignore();
+	int aktarma = 0;
 
 	try {
 		prpStmt = con->prepareStatement("SELECT * FROM seferler WHERE ucustarihi =" + flydate + " AND BN = " + to_string(yBN) + " AND BIN = " + to_string(yBIN));
 		res = prpStmt->executeQuery();
-		cout << setiosflags(ios::left);
-		cout << "Ucus No" << setw(20) << "Tarih" << setw(20) << "Ucak No" << setw(20) << "Saat" << endl;
-		while (res->next()) {
-			cout << setw(20) << i << "." << setw(20) << res->getString(1) << setw(20) << res->getInt(2) << setw(20) << res->getString(5) << endl ;
+		
+		if (res->rowsCount() == 0) { // Dogrudan ucus yoksa 1 aktarmali ucuslari listele
+
+			prpStmt = con->prepareStatement("SELECT * FROM seferler as s1, seferler as s2 where s1.BN = " + to_string(yBN) + " AND s1.BIN = s2.BN AND s2.BIN =" + to_string(yBIN) + " AND s1.ucustarihi = " + flydate + " AND str_to_date(s2.ucustarihi,'%d%m%Y' ) >= str_to_date( s1.ucustarihi, '%d%m%Y')");
+			res = prpStmt->executeQuery();
+			
+			if (res->rowsCount() == 0) { // 1 Aktarmali yoksa 2 aktarmali bak
+				prpStmt = con->prepareStatement("SELECT * from seferler as s1 , seferler as s2 , seferler as s3 where s1.BN = " + to_string(yBN) + " AND s1.BIN = s2.BN AND s2.BIN = s3.BN AND s3.BIN = " + to_string(yBIN) + " AND s1.ucustarihi = " + flydate + " AND str_to_date(s3.ucustarihi,'%d%m%Y') >= str_to_date(s2.ucustarihi,'%d%m%Y') AND str_to_date(s2.ucustarihi,'%d%m%Y') > str_to_date(s1.ucustarihi,'%d%m%Y')");
+				res = prpStmt->executeQuery();
+				
+				if (res->rowsCount() == 0) {
+					aktarma = -1;
+				}
+				else {
+					aktarma = 2;
+				}
+			}
+			else {
+				aktarma = 1;
+			}
+			
 		}
+		
+		
+		cout << setiosflags(ios::left);
+
+		if (aktarma == 0) {
+			cout << setw(15) << "Ucus No" << setw(15) << "Tarih" << setw(15) << "Ucak No" << setw(15) << "Saat" << endl;
+			while (res->next()) {
+				cout << setw(15) << i << setw(15) << res->getString(1) << setw(15) << res->getInt(2) << setw(15) << res->getString(5) << endl;
+			}
+		}
+		else if (aktarma == 1) {
+			cout << setw(15) <<"Ucus No" << setw(15) << "Tarih 1" << setw(15) << "Kalkis" << setw(15) << "Aktarma" << setw(15) << "Kalkis Saati" << setw(15) << " Tarih 2" << setw(15) << "Inis" << setw(15) << " Kalkis Saati" << endl;
+			while (res->next()) {
+				cout << setw(15) << i << setw(15) << res->getString(1) << setw(15) << res->getInt(3) << setw(15) << res->getInt(4) << setw(15) << res->getString(5) << setw(15) << res->getString(6) << setw(15) << res->getInt(9) << setw(15) << res->getString(10) << endl;
+			}
+		}
+		else if (aktarma == 2) {
+			cout << setw(15) << "Ucus No" << setw(15) << "Tarih 1" << setw(15) << "Kalkis" << setw(15) << "Aktarma" << setw(15) << "Kalkis Saati" << setw(15) << " Tarih 2" << setw(15) << "Inis" << setw(15) << " Kalkis Saati" << setw(15) << "Tarih 3" << setw(15) << "Inis" << setw(15) << "Kalkis Saati" << endl;
+			while (res->next()) {
+				cout << setw(15) << i << setw(15) << res->getString(1) << setw(15) << res->getInt(3) << setw(15) << res->getInt(4) << setw(15) << res->getString(5) << setw(15) << res->getString(6) << setw(15) << res->getInt(9) << setw(15) << res->getString(10) << setw(15) << res->getString(11) << setw(15) << res->getInt(14) << setw(15) << res->getString(15) << endl;
+			}
+		}
+
+		
 		cout << "Sectiginiz ucus nosunu giriniz:";
 		cin >> selectedFlyNo;
 		cin.clear();
@@ -409,56 +454,100 @@ void sellaTicket() {
 	}
 	
 	int tckns[50];
-
+	
 	try {
-		prpStmt = con->prepareStatement("SELECT * FROM seferler WHERE ucustarihi = " + flydate + " AND BN = " + to_string(yBN) + " AND BIN = " + to_string(yBIN));
-		res = prpStmt->executeQuery();
+		if (aktarma == 0) {
+			prpStmt = con->prepareStatement("SELECT * FROM seferler WHERE ucustarihi = " + flydate + " AND BN = " + to_string(yBN) + " AND BIN = " + to_string(yBIN));
+			res = prpStmt->executeQuery();
+		}
+		else if(aktarma == 1) {
+			prpStmt = con->prepareStatement("SELECT * FROM seferler as s1, seferler as s2 where s1.BN = " + to_string(yBN) + " AND s1.BIN = s2.BN AND s2.BIN =" + to_string(yBIN) + " AND s1.ucustarihi = " + flydate  + " AND str_to_date(s2.ucustarihi,'%d%m%Y' ) >= str_to_date( s1.ucustarihi, '%d%m%Y')");
+			res = prpStmt->executeQuery();
+		}
+		else if (aktarma == 2) {
+			prpStmt = con->prepareStatement("SELECT * from seferler as s1 , seferler as s2 , seferler as s3 where s1.BN = " + to_string(yBN) + " AND s1.BIN = s2.BN AND s2.BIN = s3.BN AND s3.BIN = " + to_string(yBIN) + " AND s1.ucustarihi = " + flydate + " AND str_to_date(s3.ucustarihi,'%d%m%Y') >= str_to_date(s2.ucustarihi,'%d%m%Y') AND str_to_date(s2.ucustarihi,'%d%m%Y') > str_to_date(s1.ucustarihi,'%d%m%Y')");
+			res = prpStmt->executeQuery();
+		}
+
+		
 		for (int j = 0; j < i; j++) {
 			res->next();
 		}
 
-		string sctFlyDate = res->getString(1);
+		
+		
+		/*string sctFlyDate = res->getString(1);
 		int sctUKN = res->getInt(2);
 		int sctBN = res->getInt(3);
 		int sctBIN = res->getInt(4);
-		if (!isPlaneEmpty(sctUKN, sctFlyDate, ticketsNumber)) {
-			cout << "Ucak Kapasitesi Dolu! Bilet satilamaz.\n";
-			return;
+		*/
+
+		string sctFlyDate[3];
+		int sctUKN[3], sctBN[3], sctBIN[3];
+
+		if (aktarma >= 0) {
+			sctFlyDate[0] = res->getString(1);
+			sctUKN[0] = res->getInt(2);
+			sctBN[0] = res->getInt(3);
+			sctBIN[0] = res->getInt(4);
 		}
-		else {
-			for (int j = 0; j < ticketsNumber; j++) {
-				cout << j + 1 << ". Yolcunun TCKN giriniz:";
-				cin >> tckns[i];
+		
+		if (aktarma >= 1) {
+			sctFlyDate[1] = res->getString(6);
+			sctUKN[1] = res->getInt(7);
+			sctBN[1] = res->getInt(8);
+			sctBIN[1] = res->getInt(9);
+		}
+		
+		if (aktarma == 2) {
+			sctFlyDate[2] = res->getString(11);
+			sctUKN[2] = res->getInt(12);
+			sctBN[2] = res->getInt(13);
+			sctBIN[2] = res->getInt(14);
+		 }
+
+		for (int h = 0; h <= aktarma; h++) {
+			if (!isPlaneEmpty(sctUKN[h], sctFlyDate[h], ticketsNumber)) {
+				cout << sctUKN[h] << " - Ucak Kapasitesi Dolu! Bilet satilamaz.\n";
+				return;
 			}
 		}
+		
 
 		for (int j = 0; j < ticketsNumber; j++) {
-			int tcno = tckns[i];
+			cout << j + 1 << ". Yolcunun TCKN giriniz:";
+			cin >> tckns[j];
+		}
+		
+
+		for (int j = 0; j < ticketsNumber; j++) {
+			int tcno = tckns[j];
 			prpStmt = con->prepareStatement("SELECT * FROM yolcular WHERE TCKN = " + to_string(tcno));
 			res = prpStmt->executeQuery();
-
-			if (res == NULL) {
-				cout << "Yolcu kayitli degil! Yolcu bilgilerini giriniz ! \n";
+			if (res->rowsCount() == 0) {
+				cout << j+1 <<".Yolcu kayitli degil! Yolcu bilgilerini giriniz ! \n";
 				getPassengerInfo();
 			}
 			
 		}
 
 		for (int j = 0; j < ticketsNumber; j++) {
-			prpStmt = con->prepareStatement("INSERT INTO yolcu(ucustarihi,UKN,TCKN,BN,BIN) VALUES(?,?,?,?,?)");
-			prpStmt->setString(1, sctFlyDate);
-			prpStmt->setInt(2, sctUKN);
-			prpStmt->setInt(3, tckns[i]);
-			prpStmt->setInt(4, sctBN);
-			prpStmt->setInt(5, sctBIN);
-			prpStmt->executeUpdate();
+			for (int n = 0; n <= aktarma; n++) {
+				prpStmt = con->prepareStatement("INSERT INTO yolcu(ucustarihi,UKN,TCKN,BN,BIN) VALUES(?,?,?,?,?)");
+				prpStmt->setString(1, sctFlyDate[n]);
+				prpStmt->setInt(2, sctUKN[n]);
+				prpStmt->setInt(3, tckns[j]);
+				prpStmt->setInt(4, sctBN[n]);
+				prpStmt->setInt(5, sctBIN[n]);
+				prpStmt->executeUpdate();
+			}
 		}
 
 		
 
 	}
 	catch (sql::SQLException &e) {
-		cout << "Bilet Satisi 2 ! Hata : " << e.what() << endl;
+		cout << "Bilet Satisi 2 ! Hata : " << e.what() << endl <<e.getSQLState() << endl;
 	}
 
 }
@@ -519,7 +608,7 @@ void cancelaFly() {
 	cin.ignore();
 
 	try {
-		prpStmt = con->prepareStatement("DELETE FROM sefer where ucustarihi =" + flydate + "AND UKN = " + to_string(ukn) + "AND saat = " + flyhour);
+		prpStmt = con->prepareStatement("DELETE FROM seferler where ucustarihi = " + flydate + " AND UKN = " + to_string(ukn) + " AND saat = " + flyhour);
 		res = prpStmt->executeQuery();
 	}
 	catch (sql::SQLException &e) {
@@ -532,11 +621,12 @@ void listVoyagesFullness() {
 	cout << "\n\n";
 	
 	try {
-		prpStmt = con->prepareStatement("Select distinct * from yolcu group by UKN,ucustarihi order by count(*) desc  ");
+		prpStmt = con->prepareStatement("Select distinct *,count(*) from yolcu group by UKN,ucustarihi order by count(*) desc");
 		res = prpStmt->executeQuery();
-		cout << setw(20) << "Ucus Tarihi" << setw(20) << "UKN" << setw(20) << "BN" << setw(20) << "BIN" << setw(20) << "Saat" << endl;
+		cout << setiosflags(ios::left);
+		cout << setw(20) << "Ucus Tarihi" << setw(20) << "UKN" << setw(20) << "BN" << setw(20) << "BIN" << setw(20) << "Yolcu sayisi" << endl;
 		while (res->next()) {
-			cout << res->getString("ucustarihi") << setw(20) << res->getInt("UKN") << setw(20) << res->getInt("BN") << setw(20) << res->getInt("BIN") << setw(20) << res->getString("saat") << endl;
+			cout << setw(20) << res->getString(1) << setw(20) << res->getInt(2) << setw(20) << res->getInt(4) << setw(20) << res->getInt(5) << setw(20) << res->getInt(6) << endl;
 		}
 
 	}
@@ -605,7 +695,7 @@ int main()
 			listVoyagesFullness();
 			break;
 		case 8:
-			getPassengerInfo();
+			getPassengerInfo(); // yolcu ekle
 			break;
 		case 9:
 			//Ucak Ekle
